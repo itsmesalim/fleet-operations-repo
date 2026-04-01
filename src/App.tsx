@@ -1,22 +1,22 @@
 // Main application component with routing
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { AuthProvider } from './contexts/AuthContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { DashboardLayout } from './components/layout/DashboardLayout';
-import { ToastContainer } from './components/ui/Toast';
+import { AuthProvider } from "./contexts/AuthContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { ToastContainer } from "./components/ui/Toast";
 
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
-import { Routes as RoutesPage } from './pages/Routes';
-import { Teams } from './pages/Teams';
-import { Orders } from './pages/Orders';
-import { Analytics } from './pages/Analytics';
-import { Settings } from './pages/Settings';
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { Dashboard } from "./pages/Dashboard";
+import { Routes as RoutesPage } from "./pages/Routes";
+import { Teams } from "./pages/Teams";
+import { Orders } from "./pages/Orders";
+import { Analytics } from "./pages/Analytics";
+import { Settings } from "./pages/Settings";
 
 // Create QueryClient for React Query
 const queryClient = new QueryClient({
@@ -45,6 +45,26 @@ function App() {
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route
+                path="/routes"
+                element={<Navigate to="/dashboard/routes" replace />}
+              />
+              <Route
+                path="/teams"
+                element={<Navigate to="/dashboard/teams" replace />}
+              />
+              <Route
+                path="/orders"
+                element={<Navigate to="/dashboard/orders" replace />}
+              />
+              <Route
+                path="/analytics"
+                element={<Navigate to="/dashboard/analytics" replace />}
+              />
+              <Route
+                path="/settings"
+                element={<Navigate to="/dashboard/settings" replace />}
+              />
 
               {/* Protected dashboard routes */}
               <Route
