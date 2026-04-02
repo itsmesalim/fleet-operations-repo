@@ -26,6 +26,7 @@ export function UnassignedOrdersZone({
   // Set up drop functionality to unassign orders
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ORDER_DRAG_TYPE,
+    canDrop: (item: { order: Order }) => Boolean(item.order.route_id),
     drop: (item: { id: string; order: Order }) => {
       // Don't process if already unassigned
       if (!item.order.route_id) return;
@@ -38,7 +39,7 @@ export function UnassignedOrdersZone({
       });
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
   });

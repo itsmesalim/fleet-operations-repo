@@ -20,6 +20,7 @@ export function UnassignedTeamsZone({ teams }: UnassignedTeamsZoneProps) {
   // Set up drop functionality to unassign teams
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: TEAM_DRAG_TYPE,
+    canDrop: (item: { team: Team }) => Boolean(item.team.route_id),
     drop: (item: { id: string; team: Team }) => {
       // Don't process if already unassigned
       if (!item.team.route_id) return;
@@ -32,7 +33,7 @@ export function UnassignedTeamsZone({ teams }: UnassignedTeamsZoneProps) {
       });
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
   });

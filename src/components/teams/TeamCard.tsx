@@ -17,7 +17,7 @@ export const TEAM_DRAG_TYPE = "TEAM";
  */
 export function TeamCard({ team }: TeamCardProps) {
   // Set up drag functionality
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, preview] = useDrag({
     type: TEAM_DRAG_TYPE,
     item: { id: team.id, type: TEAM_DRAG_TYPE, team },
     collect: (monitor) => ({
@@ -27,18 +27,23 @@ export function TeamCard({ team }: TeamCardProps) {
 
   return (
     <div
-      ref={drag}
+      ref={preview}
       className={cn(
-        "p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 cursor-move transition-all",
+        "p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 transition-all",
         "hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md",
         isDragging && "opacity-50 scale-95",
       )}
     >
       <div className="flex items-start gap-3">
         {/* Drag handle */}
-        <div className="mt-1 text-gray-400">
+        <button
+          ref={drag}
+          type="button"
+          aria-label={`Drag ${team.name}`}
+          className="mt-1 rounded border-0 bg-transparent p-0 text-gray-400 cursor-grab active:cursor-grabbing"
+        >
           <GripVertical className="w-5 h-5" />
-        </div>
+        </button>
 
         {/* Team icon */}
         <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900/20">
@@ -63,7 +68,7 @@ export function TeamCard({ team }: TeamCardProps) {
           {team.members && team.members.length > 0 && (
             <div className="flex items-center gap-2 mt-2">
               <div className="flex -space-x-2">
-                {team.members.slice(0, 3).map((member, index) => (
+                {team.members.slice(0, 3).map((member) => (
                   <div
                     key={member.id}
                     className="flex items-center justify-center w-6 h-6 text-xs font-medium text-gray-700 bg-gray-300 border-2 border-white rounded-full dark:bg-gray-600 dark:border-gray-700 dark:text-gray-200"

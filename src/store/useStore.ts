@@ -27,12 +27,14 @@ interface NotificationState {
 interface UndoRedoState {
   undoStack: Array<{
     activityLogId: string;
-    action: () => Promise<void>;
+    undoAction: () => Promise<void>;
+    redoAction: () => Promise<void>;
     description: string;
   }>;
   redoStack: Array<{
     activityLogId: string;
-    action: () => Promise<void>;
+    undoAction: () => Promise<void>;
+    redoAction: () => Promise<void>;
     description: string;
   }>;
   addUndo: (item: UndoRedoState['undoStack'][0]) => void;
@@ -106,7 +108,7 @@ export const useStore = create<Store>((set, get) => ({
     if (state.undoStack.length === 0) return;
 
     const item = state.undoStack[state.undoStack.length - 1];
-    await item.action();
+    await item.undoAction();
 
     set({
       undoStack: state.undoStack.slice(0, -1),
@@ -120,7 +122,7 @@ export const useStore = create<Store>((set, get) => ({
     if (state.redoStack.length === 0) return;
 
     const item = state.redoStack[state.redoStack.length - 1];
-    await item.action();
+    await item.redoAction();
 
     set({
       redoStack: state.redoStack.slice(0, -1),

@@ -1,3 +1,5 @@
+import { UserRole } from '../types';
+
 // Utility helper functions
 
 /**
@@ -153,7 +155,11 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 /**
  * Check if user has permission based on role
  */
-export function hasPermission(userRole: string, requiredRole: string[]): boolean {
+export function hasPermission(
+  userRole: UserRole | undefined,
+  requiredRole: UserRole[]
+): boolean {
+  if (!userRole) return false;
   return requiredRole.includes(userRole);
 }
 

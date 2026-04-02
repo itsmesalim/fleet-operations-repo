@@ -2,7 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: light;
+    --app-bg: #f4f7fb;
+    --app-bg-accent: rgba(37, 99, 235, 0.14);
+    --app-bg-secondary: rgba(14, 165, 233, 0.12);
+    --app-surface: rgba(255, 255, 255, 0.78);
+    --app-surface-strong: rgba(255, 255, 255, 0.92);
+    --app-border: rgba(148, 163, 184, 0.22);
+    --app-shadow: 0 18px 45px rgba(15, 23, 42, 0.09);
+    --app-shadow-strong: 0 24px 60px rgba(15, 23, 42, 0.14);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --app-bg: #081120;
+    --app-bg-accent: rgba(56, 189, 248, 0.12);
+    --app-bg-secondary: rgba(59, 130, 246, 0.16);
+    --app-surface: rgba(15, 23, 42, 0.72);
+    --app-surface-strong: rgba(15, 23, 42, 0.9);
+    --app-border: rgba(148, 163, 184, 0.16);
+    --app-shadow: 0 24px 60px rgba(2, 8, 23, 0.42);
+    --app-shadow-strong: 0 30px 90px rgba(2, 8, 23, 0.55);
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply min-h-screen text-gray-900 dark:text-gray-100;
+    background:
+      radial-gradient(circle at top left, var(--app-bg-accent), transparent 28%),
+      radial-gradient(circle at top right, var(--app-bg-secondary), transparent 24%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 28%),
+      var(--app-bg);
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .app-shell {
+    background:
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.32), transparent 24%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 22%);
+  }
+
+  .premium-card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow);
+    backdrop-filter: blur(18px);
+  }
+
+  .premium-card-strong {
+    background: var(--app-surface-strong);
+    box-shadow: var(--app-shadow-strong);
+  }
+}
+
 @layer utilities {
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 14px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
   @keyframes slide-in-right {
     from {
       transform: translateX(100%);
@@ -16,5 +90,9 @@
 
   .animate-slide-in-right {
     animation: slide-in-right 0.3s ease-out;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.45s ease-out both;
   }
 }

@@ -15,14 +15,15 @@ export function Card({ children, className, padding = 'md' }: CardProps) {
   const paddingClasses = {
     none: '',
     sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6',
+    md: 'p-5',
+    lg: 'p-7',
   };
 
   return (
     <div
       className={cn(
-        'bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700',
+        'premium-card premium-card-strong rounded-[24px] transition-all duration-300',
+        'hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-strong)]',
         paddingClasses[padding],
         className
       )}

@@ -1,8 +1,91 @@
 // Custom hooks for orders data management using React Query
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Order } from '../types';
+import { Order, Route } from '../types';
 import { useStore } from '../store/useStore';
+
+interface OrderMutationContext {
+  previousOrders?: Order[];
+  previousRoutes?: Route[];
+}
+
+interface UpdateOrderVariables {
+  id: string;
+  updates: Partial<Order>;
+  previousState?: Order;
+}
+
+function updateOrdersCache(
+  orders: Order[] | undefined,
+  orderId: string,
+  updates: Partial<Order>
+) {
+  if (!orders) return orders;
+
+  return orders.map((order) =>
+    order.id === orderId
+      ? {
+          ...order,
+          ...updates,
+        }
+      : order
+  );
+}
+
+function updateRoutesOrderAssignments(
+  routes: Route[] | undefined,
+  orderId: string,
+  updates: Partial<Order>,
+  previousState?: Order
+) {
+  if (!routes) return routes;
+
+  return routes.map((route) => {
+    const currentOrders = route.orders || [];
+    const filteredOrders = currentOrders.filter((order) => order.id !== orderId);
+    const nextRouteId =
+      updates.route_id !== undefined ? updates.route_id : previousState?.route_id;
+
+    if (route.id !== nextRouteId) {
+      return {
+        ...route,
+        orders: filteredOrders,
+      };
+    }
+
+    const baseOrder =
+      filteredOrders.find((order) => order.id === orderId) ||
+      currentOrders.find((order) => order.id === orderId) ||
+      previousState;
+
+    return {
+      ...route,
+      orders: baseOrder
+        ? [
+            ...filteredOrders,
+            {
+              ...baseOrder,
+              ...updates,
+            },
+          ]
+        : filteredOrders,
+    };
+  });
+}
+
+function applyOrderOptimisticUpdate(
+  queryClient: ReturnType<typeof useQueryClient>,
+  orderId: string,
+  updates: Partial<Order>,
+  previousState?: Order
+) {
+  queryClient.setQueryData<Order[]>(['orders'], (current) =>
+    updateOrdersCache(current, orderId, updates)
+  );
+  queryClient.setQueryData<Route[]>(['routes'], (current) =>
+    updateRoutesOrderAssignments(current, orderId, updates, previousState)
+  );
+}
 
 /**
  * Fetch all orders
@@ -89,15 +172,11 @@ export function useUpdateOrder() {
   const queryClient = useQueryClient();
   const { addNotification, addUndo } = useStore();
 
-  return useMutation({
+  return useMutation<Order, Error, UpdateOrderVariables, OrderMutationContext>({
     mutationFn: async ({
       id,
       updates,
       previousState
-    }: {
-      id: string;
-      updates: Partial<Order>;
-      previousState?: Order
     }) => {
       const { data, error } = await supabase
         .from('orders')
@@ -126,14 +205,42 @@ export function useUpdateOrder() {
 
         // Add to undo stack
         if (logData) {
+          const nextState = {
+            ...previousState,
+            ...updates,
+          };
+
           addUndo({
             activityLogId: logData.id,
-            action: async () => {
+            undoAction: async () => {
+              applyOrderOptimisticUpdate(
+                queryClient,
+                id,
+                {
+                  route_id: previousState.route_id,
+                  status: previousState.status,
+                },
+                nextState
+              );
+
               await supabase
                 .from('orders')
                 .update({
                   route_id: previousState.route_id,
                   status: previousState.status
+                })
+                .eq('id', id);
+              queryClient.invalidateQueries({ queryKey: ['orders'] });
+              queryClient.invalidateQueries({ queryKey: ['routes'] });
+            },
+            redoAction: async () => {
+              applyOrderOptimisticUpdate(queryClient, id, updates, previousState);
+
+              await supabase
+                .from('orders')
+                .update({
+                  route_id: nextState.route_id,
+                  status: nextState.status,
                 })
                 .eq('id', id);
               queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -146,16 +253,39 @@ export function useUpdateOrder() {
 
       return data;
     },
+    onMutate: async ({ id, updates, previousState }) => {
+      await queryClient.cancelQueries({ queryKey: ['orders'] });
+      await queryClient.cancelQueries({ queryKey: ['routes'] });
+
+      const previousOrders = queryClient.getQueryData<Order[]>(['orders']);
+      const previousRoutes = queryClient.getQueryData<Route[]>(['routes']);
+
+      applyOrderOptimisticUpdate(queryClient, id, updates, previousState);
+
+      return {
+        previousOrders,
+        previousRoutes,
+      };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousOrders !== undefined) {
+        queryClient.setQueryData<Order[]>(['orders'], context.previousOrders);
+      }
+      if (context?.previousRoutes !== undefined) {
+        queryClient.setQueryData<Route[]>(['routes'], context.previousRoutes);
+      }
+
       addNotification({
         title: 'Error',
         message: error.message || 'Failed to update order',
         type: 'error',
       });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },

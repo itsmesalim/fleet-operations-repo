@@ -22,6 +22,7 @@ export function RouteDropZone({ route, teams }: RouteDropZoneProps) {
   // Set up drop functionality
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: TEAM_DRAG_TYPE,
+    canDrop: (item: { team: Team }) => item.team.route_id !== route.id,
     drop: (item: { id: string; team: Team }) => {
       // Don't reassign if already on this route
       if (item.team.route_id === route.id) return;
@@ -34,7 +35,7 @@ export function RouteDropZone({ route, teams }: RouteDropZoneProps) {
       });
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
   });
@@ -95,7 +96,9 @@ export function RouteDropZone({ route, teams }: RouteDropZoneProps) {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {isActive
                 ? "Drop team here to assign"
-                : "Drag teams here to assign to this route"}
+                : canDrop
+                  ? "Drag teams here to assign to this route"
+                  : "Teams already on this route stay here"}
             </p>
           </div>
         )}

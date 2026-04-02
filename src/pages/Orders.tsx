@@ -1,7 +1,5 @@
 // Orders management page with drag-and-drop and bulk actions
 import React, { useMemo, useState } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import {
   Plus,
   Package,
@@ -171,8 +169,7 @@ export function Orders() {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -238,6 +235,11 @@ export function Orders() {
               className="lg:w-48"
             />
           </div>
+
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+            Drag orders from the grip handle to reassign them between routes or
+            back into the unassigned list.
+          </p>
 
           {/* Bulk actions */}
           {filteredOrders && filteredOrders.length > 0 && (
@@ -561,6 +563,5 @@ export function Orders() {
           </form>
         </Modal>
       </div>
-    </DndProvider>
   );
 }

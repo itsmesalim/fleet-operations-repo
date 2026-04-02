@@ -1,8 +1,91 @@
 // Custom hooks for teams data management using React Query
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Team } from '../types';
+import { Route, Team } from '../types';
 import { useStore } from '../store/useStore';
+
+interface TeamMutationContext {
+  previousTeams?: Team[];
+  previousRoutes?: Route[];
+}
+
+interface UpdateTeamVariables {
+  id: string;
+  updates: Partial<Team>;
+  previousState?: Team;
+}
+
+function updateTeamsCache(
+  teams: Team[] | undefined,
+  teamId: string,
+  updates: Partial<Team>
+) {
+  if (!teams) return teams;
+
+  return teams.map((team) =>
+    team.id === teamId
+      ? {
+          ...team,
+          ...updates,
+        }
+      : team
+  );
+}
+
+function updateRoutesTeamAssignments(
+  routes: Route[] | undefined,
+  teamId: string,
+  updates: Partial<Team>,
+  previousState?: Team
+) {
+  if (!routes) return routes;
+
+  return routes.map((route) => {
+    const currentTeams = route.teams || [];
+    const filteredTeams = currentTeams.filter((team) => team.id !== teamId);
+    const nextRouteId =
+      updates.route_id !== undefined ? updates.route_id : previousState?.route_id;
+
+    if (route.id !== nextRouteId) {
+      return {
+        ...route,
+        teams: filteredTeams,
+      };
+    }
+
+    const baseTeam =
+      filteredTeams.find((team) => team.id === teamId) ||
+      currentTeams.find((team) => team.id === teamId) ||
+      previousState;
+
+    return {
+      ...route,
+      teams: baseTeam
+        ? [
+            ...filteredTeams,
+            {
+              ...baseTeam,
+              ...updates,
+            },
+          ]
+        : filteredTeams,
+    };
+  });
+}
+
+function applyTeamOptimisticUpdate(
+  queryClient: ReturnType<typeof useQueryClient>,
+  teamId: string,
+  updates: Partial<Team>,
+  previousState?: Team
+) {
+  queryClient.setQueryData<Team[]>(['teams'], (current) =>
+    updateTeamsCache(current, teamId, updates)
+  );
+  queryClient.setQueryData<Route[]>(['routes'], (current) =>
+    updateRoutesTeamAssignments(current, teamId, updates, previousState)
+  );
+}
 
 /**
  * Fetch all teams with members
@@ -98,15 +181,11 @@ export function useUpdateTeam() {
   const queryClient = useQueryClient();
   const { addNotification, addUndo } = useStore();
 
-  return useMutation({
+  return useMutation<Team, Error, UpdateTeamVariables, TeamMutationContext>({
     mutationFn: async ({
       id,
       updates,
       previousState
-    }: {
-      id: string;
-      updates: Partial<Team>;
-      previousState?: Team
     }) => {
       const { data, error } = await supabase
         .from('teams')
@@ -135,12 +214,34 @@ export function useUpdateTeam() {
 
         // Add to undo stack
         if (logData) {
+          const nextState = {
+            ...previousState,
+            ...updates,
+          };
+
           addUndo({
             activityLogId: logData.id,
-            action: async () => {
+            undoAction: async () => {
+              applyTeamOptimisticUpdate(
+                queryClient,
+                id,
+                { route_id: previousState.route_id },
+                nextState
+              );
+
               await supabase
                 .from('teams')
                 .update({ route_id: previousState.route_id })
+                .eq('id', id);
+              queryClient.invalidateQueries({ queryKey: ['teams'] });
+              queryClient.invalidateQueries({ queryKey: ['routes'] });
+            },
+            redoAction: async () => {
+              applyTeamOptimisticUpdate(queryClient, id, updates, previousState);
+
+              await supabase
+                .from('teams')
+                .update({ route_id: nextState.route_id })
                 .eq('id', id);
               queryClient.invalidateQueries({ queryKey: ['teams'] });
               queryClient.invalidateQueries({ queryKey: ['routes'] });
@@ -152,18 +253,39 @@ export function useUpdateTeam() {
 
       return data;
     },
+    onMutate: async ({ id, updates, previousState }) => {
+      await queryClient.cancelQueries({ queryKey: ['teams'] });
+      await queryClient.cancelQueries({ queryKey: ['routes'] });
+
+      const previousTeams = queryClient.getQueryData<Team[]>(['teams']);
+      const previousRoutes = queryClient.getQueryData<Route[]>(['routes']);
+
+      applyTeamOptimisticUpdate(queryClient, id, updates, previousState);
+
+      return {
+        previousTeams,
+        previousRoutes,
+      };
+    },
     onSuccess: () => {
-      // Use optimistic update for better UX
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousTeams !== undefined) {
+        queryClient.setQueryData<Team[]>(['teams'], context.previousTeams);
+      }
+      if (context?.previousRoutes !== undefined) {
+        queryClient.setQueryData<Route[]>(['routes'], context.previousRoutes);
+      }
+
       addNotification({
         title: 'Error',
         message: error.message || 'Failed to update team',
         type: 'error',
       });
-      // Rollback optimistic update
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },
@@ -209,7 +331,6 @@ export function useDeleteTeam() {
  * Assign team to route (for drag-and-drop)
  */
 export function useAssignTeamToRoute() {
-  const queryClient = useQueryClient();
   const updateTeam = useUpdateTeam();
 
   return useMutation({
@@ -234,10 +355,6 @@ export function useAssignTeamToRoute() {
         updates: { route_id: routeId },
         previousState: team,
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
     },
   });
 }

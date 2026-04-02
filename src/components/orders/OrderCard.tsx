@@ -19,7 +19,7 @@ export const ORDER_DRAG_TYPE = 'ORDER';
  */
 export function OrderCard({ order, isSelected, onToggleSelection }: OrderCardProps) {
   // Set up drag functionality
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, preview] = useDrag({
     type: ORDER_DRAG_TYPE,
     item: { id: order.id, type: ORDER_DRAG_TYPE, order },
     collect: (monitor) => ({
@@ -29,7 +29,7 @@ export function OrderCard({ order, isSelected, onToggleSelection }: OrderCardPro
 
   return (
     <div
-      ref={drag}
+      ref={preview}
       className={cn(
         'p-4 bg-white dark:bg-gray-700 rounded-lg border-2 transition-all',
         'hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md',
@@ -52,9 +52,14 @@ export function OrderCard({ order, isSelected, onToggleSelection }: OrderCardPro
         )}
 
         {/* Drag handle */}
-        <div className="mt-1 text-gray-400">
+        <button
+          ref={drag}
+          type="button"
+          aria-label={`Drag order ${order.order_number}`}
+          className="mt-1 rounded border-0 bg-transparent p-0 text-gray-400 cursor-grab active:cursor-grabbing"
+        >
           <GripVertical className="w-5 h-5" />
-        </div>
+        </button>
 
         {/* Order icon */}
         <div className="p-2 bg-purple-100 rounded-lg dark:bg-purple-900/20">

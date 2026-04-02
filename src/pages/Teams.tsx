@@ -1,7 +1,5 @@
 // Teams management page with drag-and-drop assignment
 import React, { useMemo, useState } from "react";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import {
   Plus,
   Users as UsersIcon,
@@ -90,8 +88,7 @@ export function Teams() {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -116,6 +113,10 @@ export function Teams() {
             placeholder="Search teams by name..."
             resultCount={filteredTeams?.length || 0}
           />
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+            Drag teams using the grip handle and drop them on a route or back
+            into the unassigned column.
+          </p>
         </Card>
 
         {teamsLoading || routesLoading ? (
@@ -334,6 +335,5 @@ export function Teams() {
           </form>
         </Modal>
       </div>
-    </DndProvider>
   );
 }

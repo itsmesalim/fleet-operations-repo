@@ -2,11 +2,12 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '../types';
 import { Skeleton } from './ui/Skeleton';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
 }
 
 /**
@@ -34,8 +35,19 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="w-full h-12" />
+          <Skeleton className="w-full h-64" />
+        </div>
+      </div>
+    );
+  }
+
   // Check role-based access
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  if (allowedRoles && !allowedRoles.includes(profile.role)) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100 dark:bg-gray-900">
         <div className="text-center">

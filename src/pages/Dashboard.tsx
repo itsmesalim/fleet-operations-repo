@@ -25,166 +25,145 @@ export function Dashboard() {
   const { data: routes, isLoading: routesLoading } = useRoutes();
   const { data: orders, isLoading: ordersLoading } = useOrders();
 
-  // Get recent orders (last 5)
   const recentOrders = orders?.slice(0, 5) || [];
-
-  // Calculate trends (simplified - in production would compare with previous period)
   const routeTrend = 12;
   const orderTrend = -5;
   const revenueTrend = 18;
 
+  const stats = [
+    {
+      label: "Active Routes",
+      value: kpis?.activeRoutes || 0,
+      helper: `of ${kpis?.totalRoutes || 0} total routes`,
+      trend: routeTrend,
+      tone: "from-sky-500/20 to-blue-500/10",
+      iconWrap: "bg-sky-500/12 text-sky-600 dark:text-sky-300",
+      icon: Truck,
+    },
+    {
+      label: "Active Teams",
+      value: kpis?.activeTeams || 0,
+      helper: `of ${kpis?.totalTeams || 0} total teams`,
+      trend: 9,
+      tone: "from-emerald-500/20 to-green-500/10",
+      iconWrap: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
+      icon: Users,
+    },
+    {
+      label: "Pending Orders",
+      value: kpis?.pendingOrders || 0,
+      helper: `${kpis?.completedOrders || 0} completed today`,
+      trend: orderTrend,
+      tone: "from-violet-500/20 to-fuchsia-500/10",
+      iconWrap: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
+      icon: Package,
+    },
+    {
+      label: "Total Revenue",
+      value: formatCurrency(kpis?.totalRevenue || 0),
+      helper: `${kpis?.completionRate || 0}% completion rate`,
+      trend: revenueTrend,
+      tone: "from-amber-500/20 to-orange-500/10",
+      iconWrap: "bg-amber-500/12 text-amber-600 dark:text-amber-300",
+      icon: CheckCircle,
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Dashboard Overview
-        </h1>
-        <p className="mt-1 text-gray-600 dark:text-gray-400">
-          Welcome back! Here's what's happening with your fleet today.
-        </p>
-      </div>
+    <div className="animate-fade-up space-y-8">
+      <div className="premium-card premium-card-strong overflow-hidden rounded-[30px] p-8">
+        <div className="grid gap-8 lg:grid-cols-[1.4fr_0.9fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-sky-600 dark:text-sky-300">
+              Daily Command Center
+            </p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">
+              Dashboard Overview
+            </h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
+              Welcome back. Your fleet pulse, delivery pressure, and team
+              allocation are all visible here in one cleaner control surface.
+            </p>
+          </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Active Routes Card */}
-        <Card>
-          {kpisLoading ? (
-            <SkeletonCard />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900/20">
-                  <Truck className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div
-                  className={`flex items-center gap-1 text-sm ${routeTrend >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {routeTrend >= 0 ? (
-                    <TrendingUp className="w-4 h-4" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4" />
-                  )}
-                  {Math.abs(routeTrend)}%
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {kpis?.activeRoutes || 0}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[24px] border border-sky-200/60 bg-sky-500/[0.08] p-5 dark:border-sky-400/10 dark:bg-sky-400/10">
+              <p className="text-sm text-slate-500 dark:text-slate-300">
+                Completion rate
               </p>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Active Routes
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
+                {kpis?.completionRate || 0}%
               </p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                of {kpis?.totalRoutes || 0} total routes
+            </div>
+            <div className="rounded-[24px] border border-emerald-200/60 bg-emerald-500/[0.08] p-5 dark:border-emerald-400/10 dark:bg-emerald-400/10">
+              <p className="text-sm text-slate-500 dark:text-slate-300">
+                Revenue tracked
               </p>
-            </>
-          )}
-        </Card>
-
-        {/* Active Teams Card */}
-        <Card>
-          {kpisLoading ? (
-            <SkeletonCard />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900/20">
-                  <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {kpis?.activeTeams || 0}
-              </p>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Active Teams
-              </p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                of {kpis?.totalTeams || 0} total teams
-              </p>
-            </>
-          )}
-        </Card>
-
-        {/* Orders Card */}
-        <Card>
-          {kpisLoading ? (
-            <SkeletonCard />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-purple-100 rounded-lg dark:bg-purple-900/20">
-                  <Package className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div
-                  className={`flex items-center gap-1 text-sm ${orderTrend >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {orderTrend >= 0 ? (
-                    <TrendingUp className="w-4 h-4" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4" />
-                  )}
-                  {Math.abs(orderTrend)}%
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {kpis?.pendingOrders || 0}
-              </p>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Pending Orders
-              </p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                {kpis?.completedOrders || 0} completed today
-              </p>
-            </>
-          )}
-        </Card>
-
-        {/* Revenue Card */}
-        <Card>
-          {kpisLoading ? (
-            <SkeletonCard />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900/20">
-                  <CheckCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div
-                  className={`flex items-center gap-1 text-sm ${revenueTrend >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {revenueTrend >= 0 ? (
-                    <TrendingUp className="w-4 h-4" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4" />
-                  )}
-                  {Math.abs(revenueTrend)}%
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(kpis?.totalRevenue || 0)}
               </p>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Total Revenue
-              </p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                {kpis?.completionRate || 0}% completion rate
-              </p>
-            </>
-          )}
-        </Card>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Routes */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+
+          return (
+            <Card
+              key={stat.label}
+              className={`animate-fade-up overflow-hidden bg-gradient-to-br ${stat.tone}`}
+            >
+              {kpisLoading ? (
+                <SkeletonCard />
+              ) : (
+                <>
+                  <div className="mb-8 flex items-start justify-between">
+                    <div className={`rounded-[20px] p-3 ${stat.iconWrap}`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-sm ${
+                        stat.trend >= 0
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
+                          : "bg-rose-500/10 text-rose-600 dark:text-rose-300"
+                      }`}
+                    >
+                      {stat.trend >= 0 ? (
+                        <TrendingUp className="h-4 w-4" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4" />
+                      )}
+                      {Math.abs(stat.trend)}%
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-300">
+                    {stat.label}
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+                    {stat.value}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    {stat.helper}
+                  </p>
+                </>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="animate-fade-up">
+          <div className="mb-5 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Recent Routes
             </h2>
             <Link
               to="/dashboard/routes"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="rounded-full bg-slate-900 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900"
             >
               View all
             </Link>
@@ -192,21 +171,21 @@ export function Dashboard() {
 
           {routesLoading ? (
             <div className="space-y-3">
-              <Skeleton className="w-full h-16" count={3} />
+              <Skeleton className="h-16 w-full" count={3} />
             </div>
           ) : routes && routes.length > 0 ? (
             <div className="space-y-3">
               {routes.slice(0, 5).map((route) => (
                 <div
                   key={route.id}
-                  className="flex items-center justify-between p-3 transition-colors rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex items-center justify-between rounded-[20px] border border-slate-200/70 bg-white/65 p-4 transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:bg-white dark:border-slate-700/70 dark:bg-slate-900/45 dark:hover:border-sky-500/30"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate dark:text-white">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-gray-900 dark:text-white">
                       {route.name}
                     </p>
-                    <p className="text-sm text-gray-600 truncate dark:text-gray-400">
-                      {route.start_location} → {route.end_location}
+                    <p className="truncate text-sm text-gray-600 dark:text-gray-400">
+                      {route.start_location} {"->"} {route.end_location}
                     </p>
                   </div>
                   <Badge className={getStatusColor(route.status)}>
@@ -217,23 +196,20 @@ export function Dashboard() {
             </div>
           ) : (
             <div className="py-8 text-center">
-              <Clock className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-              <p className="text-gray-600 dark:text-gray-400">
-                No routes found
-              </p>
+              <Clock className="mx-auto mb-2 h-12 w-12 text-gray-400" />
+              <p className="text-gray-600 dark:text-gray-400">No routes found</p>
             </div>
           )}
         </Card>
 
-        {/* Recent Orders */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
+        <Card className="animate-fade-up">
+          <div className="mb-5 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Recent Orders
             </h2>
             <Link
               to="/dashboard/orders"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="rounded-full border border-slate-300 bg-white/70 px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 hover:bg-white dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
             >
               View all
             </Link>
@@ -241,83 +217,78 @@ export function Dashboard() {
 
           {ordersLoading ? (
             <div className="space-y-3">
-              <Skeleton className="w-full h-16" count={3} />
+              <Skeleton className="h-16 w-full" count={3} />
             </div>
           ) : recentOrders.length > 0 ? (
             <div className="space-y-3">
               {recentOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between p-3 transition-colors rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex items-center justify-between rounded-[20px] border border-slate-200/70 bg-white/65 p-4 transition-all hover:-translate-y-0.5 hover:border-violet-300 hover:bg-white dark:border-slate-700/70 dark:bg-slate-900/45 dark:hover:border-violet-500/30"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate dark:text-white">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-gray-900 dark:text-white">
                       {order.order_number}
                     </p>
-                    <p className="text-sm text-gray-600 truncate dark:text-gray-400">
-                      {order.customer_name} • {formatCurrency(order.value_usd)}
+                    <p className="truncate text-sm text-gray-600 dark:text-gray-400">
+                      {order.customer_name} {"•"} {formatCurrency(order.value_usd)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(order.priority)}>
-                      {order.priority}
-                    </Badge>
-                  </div>
+                  <Badge className={getStatusColor(order.priority)}>
+                    {order.priority}
+                  </Badge>
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <Package className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-              <p className="text-gray-600 dark:text-gray-400">
-                No orders found
-              </p>
+              <Package className="mx-auto mb-2 h-12 w-12 text-gray-400" />
+              <p className="text-gray-600 dark:text-gray-400">No orders found</p>
             </div>
           )}
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+      <Card className="animate-fade-up">
+        <h2 className="mb-5 text-lg font-semibold text-gray-900 dark:text-white">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Link
             to="/dashboard/routes"
-            className="p-4 text-center transition-colors border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+            className="group rounded-[24px] border border-slate-200/80 bg-gradient-to-br from-sky-500/[0.08] to-transparent p-5 text-left transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg dark:border-slate-700/70 dark:from-sky-400/[0.08]"
           >
-            <Truck className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <Truck className="mb-4 h-8 w-8 text-sky-500 transition-transform group-hover:translate-x-1" />
             <p className="font-medium text-gray-900 dark:text-white">
               Manage Routes
             </p>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               View and edit fleet routes
             </p>
           </Link>
 
           <Link
             to="/dashboard/teams"
-            className="p-4 text-center transition-colors border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 hover:border-green-500 dark:hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/10"
+            className="group rounded-[24px] border border-slate-200/80 bg-gradient-to-br from-emerald-500/[0.08] to-transparent p-5 text-left transition-all hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg dark:border-slate-700/70 dark:from-emerald-400/[0.08]"
           >
-            <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <Users className="mb-4 h-8 w-8 text-emerald-500 transition-transform group-hover:translate-x-1" />
             <p className="font-medium text-gray-900 dark:text-white">
               Manage Teams
             </p>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               Assign teams to routes
             </p>
           </Link>
 
           <Link
             to="/dashboard/orders"
-            className="p-4 text-center transition-colors border-2 border-gray-300 border-dashed rounded-lg dark:border-gray-600 hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/10"
+            className="group rounded-[24px] border border-slate-200/80 bg-gradient-to-br from-violet-500/[0.08] to-transparent p-5 text-left transition-all hover:-translate-y-1 hover:border-violet-300 hover:shadow-lg dark:border-slate-700/70 dark:from-violet-400/[0.08]"
           >
-            <Package className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <Package className="mb-4 h-8 w-8 text-violet-500 transition-transform group-hover:translate-x-1" />
             <p className="font-medium text-gray-900 dark:text-white">
               Manage Orders
             </p>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               Track and assign orders
             </p>
           </Link>

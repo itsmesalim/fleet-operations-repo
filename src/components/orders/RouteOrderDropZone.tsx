@@ -29,6 +29,7 @@ export function RouteOrderDropZone({
   // Set up drop functionality
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ORDER_DRAG_TYPE,
+    canDrop: (item: { order: Order }) => item.order.route_id !== route.id,
     drop: (item: { id: string; order: Order }) => {
       // Don't reassign if already on this route
       if (item.order.route_id === route.id) return;
@@ -41,7 +42,7 @@ export function RouteOrderDropZone({
       });
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
   });
@@ -136,7 +137,9 @@ export function RouteOrderDropZone({
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {isActive
                 ? "Drop order here to assign"
-                : "Drag orders here to assign to this route"}
+                : canDrop
+                  ? "Drag orders here to assign to this route"
+                  : "Orders already on this route stay here"}
             </p>
           </div>
         )}

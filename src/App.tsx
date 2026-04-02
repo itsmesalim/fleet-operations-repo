@@ -6,6 +6,8 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ROLE_ACCESS } from "./config/access";
+import { AppDndProvider } from "./components/dnd/AppDndProvider";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { ToastContainer } from "./components/ui/Toast";
 
@@ -36,75 +38,112 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            {/* Toast notification container */}
-            <ToastContainer />
+        <AppDndProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              {/* Toast notification container */}
+              <ToastContainer />
 
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/routes"
-                element={<Navigate to="/dashboard/routes" replace />}
-              />
-              <Route
-                path="/teams"
-                element={<Navigate to="/dashboard/teams" replace />}
-              />
-              <Route
-                path="/orders"
-                element={<Navigate to="/dashboard/orders" replace />}
-              />
-              <Route
-                path="/analytics"
-                element={<Navigate to="/dashboard/analytics" replace />}
-              />
-              <Route
-                path="/settings"
-                element={<Navigate to="/dashboard/settings" replace />}
-              />
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/routes"
+                  element={<Navigate to="/dashboard/routes" replace />}
+                />
+                <Route
+                  path="/teams"
+                  element={<Navigate to="/dashboard/teams" replace />}
+                />
+                <Route
+                  path="/orders"
+                  element={<Navigate to="/dashboard/orders" replace />}
+                />
+                <Route
+                  path="/analytics"
+                  element={<Navigate to="/dashboard/analytics" replace />}
+                />
+                <Route
+                  path="/settings"
+                  element={<Navigate to="/dashboard/settings" replace />}
+                />
 
-              {/* Protected dashboard routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Dashboard />} />
-                <Route path="routes" element={<RoutesPage />} />
-                <Route path="teams" element={<Teams />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="settings" element={<Settings />} />
-              </Route>
+                {/* Protected dashboard routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Dashboard />} />
+                  <Route
+                    path="routes"
+                    element={
+                      <ProtectedRoute allowedRoles={ROLE_ACCESS.routes}>
+                        <RoutesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="teams"
+                    element={
+                      <ProtectedRoute allowedRoles={ROLE_ACCESS.teams}>
+                        <Teams />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="orders"
+                    element={
+                      <ProtectedRoute allowedRoles={ROLE_ACCESS.orders}>
+                        <Orders />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="analytics"
+                    element={
+                      <ProtectedRoute allowedRoles={ROLE_ACCESS.analytics}>
+                        <Analytics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="settings"
+                    element={
+                      <ProtectedRoute allowedRoles={ROLE_ACCESS.settings}>
+                        <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Route>
 
-              {/* Redirect root to login */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+                {/* Redirect root to login */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
 
-              {/* 404 catch-all */}
-              <Route
-                path="*"
-                element={
-                  <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-                    <div className="text-center">
-                      <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">
-                        404
-                      </h1>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Page not found
-                      </p>
+                {/* 404 catch-all */}
+                <Route
+                  path="*"
+                  element={
+                    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+                      <div className="text-center">
+                        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">
+                          404
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Page not found
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                }
-              />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
+                  }
+                />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </AppDndProvider>
 
         {/* React Query DevTools (only in development) */}
         <ReactQueryDevtools initialIsOpen={false} />
